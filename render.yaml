@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: get-haaretz-bot
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /
+    envVars:
+      # אופציונלי — רק אם רוצים חישוב ק"מ למסלולים שאינם במחירון
+      - key: GOOGLE_MAPS_API_KEY
+        sync: false

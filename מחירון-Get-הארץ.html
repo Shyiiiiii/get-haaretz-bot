@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<meta name="theme-color" content="#070d1f">
+<title>מחירון — Get הארץ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@700;900&family=Heebo:wght@300;400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{--navy:#070d1f;--card:#0d1733;--card2:#111d3d;--line:rgba(255,255,255,.10);
+--gold:#f5b81e;--gold2:#ffd15c;--ink:#eaeefb;--dim:#8d99ba;--ok:#68d391}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--navy);color:var(--ink);font-family:Heebo,system-ui,-apple-system,sans-serif}
+body{padding:18px 14px 60px}
+.w{max-width:620px;margin:0 auto}
+header{display:flex;align-items:baseline;gap:10px;margin-bottom:4px}
+h1{font-family:"Frank Ruhl Libre",serif;font-size:27px;margin:0}
+h1 span{color:var(--gold)}
+.sub{color:var(--dim);font-size:13px;margin:0 0 20px}
+
+.field{margin-bottom:12px;position:relative}
+label{display:block;font-size:13px;color:var(--dim);margin-bottom:6px;font-weight:600}
+input[type=text]{width:100%;background:var(--card);border:1px solid var(--line);color:var(--ink);
+ border-radius:13px;padding:15px 16px;font-size:17px;font-family:inherit;outline:none}
+input[type=text]:focus{border-color:var(--gold);background:var(--card2)}
+input::placeholder{color:#5d6a8f}
+.sug{position:absolute;top:100%;right:0;left:0;background:var(--card2);border:1px solid var(--line);
+ border-radius:12px;margin-top:5px;max-height:240px;overflow-y:auto;z-index:30;display:none;
+ box-shadow:0 12px 34px rgba(0,0,0,.5)}
+.sug.on{display:block}
+.sug div{padding:12px 15px;cursor:pointer;font-size:16px;border-bottom:1px solid var(--line)}
+.sug div:last-child{border:0}
+.sug div:hover,.sug div.sel{background:rgba(245,184,30,.16);color:var(--gold2)}
+.sug .tag{float:left;font-size:11px;color:var(--dim)}
+
+.swap{display:flex;justify-content:center;margin:-4px 0 8px}
+.swap button{background:var(--card);border:1px solid var(--line);color:var(--gold);
+ width:38px;height:38px;border-radius:50%;font-size:17px;cursor:pointer}
+.swap button:active{transform:scale(.92)}
+
+.opts{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0 18px}
+.chip{background:var(--card);border:1px solid var(--line);color:var(--dim);padding:9px 14px;
+ border-radius:22px;font-size:14px;cursor:pointer;font-family:inherit;font-weight:600}
+.chip.on{background:var(--gold);color:#111;border-color:var(--gold)}
+
+.result{background:linear-gradient(160deg,var(--card2),var(--card));border:1px solid var(--line);
+ border-radius:18px;padding:26px 22px;text-align:center;min-height:150px;display:flex;
+ flex-direction:column;justify-content:center;align-items:center}
+.result .route{font-size:15px;color:var(--dim);margin-bottom:12px}
+.result .route b{color:var(--ink)}
+.price{font-family:"Frank Ruhl Libre",serif;font-size:64px;font-weight:900;color:var(--gold);line-height:1}
+.price small{font-size:28px}
+.meta{margin-top:12px;font-size:13px;color:var(--dim);line-height:1.7}
+.badge{display:inline-block;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700;margin-top:9px}
+.b-own{background:rgba(245,184,30,.18);color:var(--gold2)}
+.b-mkt{background:rgba(104,211,145,.15);color:var(--ok)}
+.b-est{background:rgba(255,255,255,.08);color:var(--dim)}
+.empty{color:var(--dim);font-size:15px}
+.wa{display:inline-block;margin-top:16px;background:#25D366;color:#062b14;padding:11px 22px;
+ border-radius:11px;text-decoration:none;font-weight:800;font-size:15px}
+
+h2{font-family:"Frank Ruhl Libre",serif;font-size:19px;margin:30px 0 10px}
+.quick{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.q{background:var(--card);border:1px solid var(--line);border-radius:11px;padding:12px 14px;
+ cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.q:active{border-color:var(--gold)}
+.q span{font-size:13.5px;line-height:1.35}
+.q b{color:var(--gold);font-size:16px;white-space:nowrap}
+footer{margin-top:34px;padding-top:18px;border-top:1px solid var(--line);color:var(--dim);font-size:12px;text-align:center;line-height:1.8}
+@media(max-width:420px){.quick{grid-template-columns:1fr}.price{font-size:56px}}
+</style></head><body><div class="w">
+
+<header><h1>מחירון Get <span>הארץ</span></h1></header>
+<p class="sub">בחר מוצא ויעד — המחיר מופיע מיד. עובד גם בלי אינטרנט.</p>
+
+<div class="field">
+  <label>מוצא</label>
+  <input type="text" id="from" placeholder="לדוגמה: בית שמש" autocomplete="off">
+  <div class="sug" id="sfrom"></div>
+</div>
+
+<div class="swap"><button id="swap" title="החלף">⇅</button></div>
+
+<div class="field">
+  <label>יעד</label>
+  <input type="text" id="to" placeholder="לדוגמה: ירושלים / רמות" autocomplete="off">
+  <div class="sug" id="sto"></div>
+</div>
+
+<div class="opts" id="opts">
+  <button class="chip on" data-pax="0">רכב פרטי</button>
+  <button class="chip" data-pax="7">ואן 7</button>
+  <button class="chip" data-pax="10">מיניבוס 10</button>
+  <button class="chip" data-pax="20">מיניבוס 20</button>
+  <button class="chip" data-pax="50">אוטובוס</button>
+  <button class="chip" id="rt">הלוך-חזור</button>
+</div>
+
+<div class="result" id="res"><div class="empty">בחר מוצא ויעד לקבלת מחיר</div></div>
+
+<h2>מסלולים נפוצים</h2>
+<div class="quick" id="quick"></div>
+
+<footer>
+  173 מסלולים · 73 ערים · מחירים מאומתים מנתוני שוק<br>
+  Get הארץ · 050-6567045
+</footer>
+</div>
+
+<script>
+const D={"routes":{"בית שמש → ירושלים":{"p":150,"src":"own","n":null,"a":null},"פתח תקווה → ירושלים":{"p":70,"src":"own","n":null,"a":null},"ירושלים → בית שמש":{"p":150,"src":"own","n":null,"a":null},"ירושלים → בני ברק":{"p":220,"src":"own","n":null,"a":null},"בני ברק → ירושלים":{"p":220,"src":"own","n":null,"a":null},"פתח תקווה → בני ברק":{"p":50,"src":"own","n":null,"a":null},"בני ברק → פתח תקווה":{"p":80,"src":"own","n":null,"a":null},"ירושלים → ביתר עילית":{"p":120,"src":"own","n":null,"a":null},"ביתר עילית → ירושלים":{"p":120,"src":"own","n":null,"a":null},"בני ברק → תל אביב":{"p":100,"src":"own","n":null,"a":null},"תל אביב → בני ברק":{"p":100,"src":"own","n":null,"a":null},"פתח תקווה → בית שמש":{"p":50,"src":"own","n":null,"a":null},"ירושלים → אשדוד":{"p":220,"src":"own","n":null,"a":null},"ירושלים → ראשון לציון":{"p":220,"src":"own","n":null,"a":null},"בני ברק → נתניה":{"p":170,"src":"own","n":null,"a":null},"טלז סטון → נתניה":{"p":100,"src":"own","n":null,"a":null},"אשדוד → בית שמש":{"p":70,"src":"own","n":null,"a":null},"ירושלים → כפר חבד":{"p":200,"src":"market","n":11,"a":82},"גבעת זאב → ירושלים":{"p":100,"src":"market","n":43,"a":42},"קרית ספר → נתניה":{"p":100,"src":"market","n":7,"a":86},"אלעד → קרית ספר":{"p":140,"src":"market","n":5,"a":100},"ראש העין → בני ברק":{"p":120,"src":"market","n":9,"a":89},"רחובות → בני ברק":{"p":150,"src":"market","n":5,"a":100},"בני ברק → רמת גן":{"p":70,"src":"market","n":14,"a":57},"בני ברק → גבעת שמואל":{"p":50,"src":"market","n":23,"a":57},"ירושלים → קרית גת":{"p":300,"src":"market","n":19,"a":58},"בני ברק → יהוד":{"p":80,"src":"market","n":4,"a":100},"ראשון לציון → בני ברק":{"p":120,"src":"market","n":9,"a":100},"אלעד → ראש העין":{"p":70,"src":"market","n":11,"a":45},"קרית ספר → ירושלים":{"p":150,"src":"market","n":33,"a":61},"לוד → בני ברק":{"p":120,"src":"market","n":10,"a":70},"פתח תקווה → אלעד":{"p":80,"src":"market","n":11,"a":82},"בני ברק → חדרה":{"p":220,"src":"market","n":10,"a":100},"חולון → בני ברק":{"p":120,"src":"market","n":5,"a":80},"בת ים → ראשון לציון":{"p":80,"src":"market","n":5,"a":80},"בני ברק → קרית ספר":{"p":150,"src":"market","n":24,"a":75},"ראשון לציון → רחובות":{"p":100,"src":"market","n":13,"a":77},"אלעד → תל השומר":{"p":120,"src":"market","n":5,"a":60},"בת ים → בית שמש":{"p":200,"src":"market","n":10,"a":100},"ירושלים → רמלה":{"p":220,"src":"market","n":7,"a":57},"תל השומר → בני ברק":{"p":80,"src":"market","n":16,"a":56},"פתח תקווה → נתניה":{"p":80,"src":"market","n":8,"a":50},"בית חורון → קרית ספר":{"p":350,"src":"market","n":5,"a":80},"עמנואל → ירושלים":{"p":350,"src":"market","n":4,"a":100},"בית שמש → עכו":{"p":100,"src":"market","n":3,"a":100},"בני ברק → בת ים":{"p":120,"src":"market","n":27,"a":81},"בני ברק → אשדוד":{"p":180,"src":"market","n":7,"a":86},"ראשון לציון → תל אביב":{"p":120,"src":"market","n":8,"a":100},"רחובות → ראשון לציון":{"p":80,"src":"market","n":5,"a":60},"בית שמש → אשדוד":{"p":100,"src":"market","n":8,"a":50},"בית שמש → ביתר עילית":{"p":120,"src":"market","n":24,"a":79},"תל אביב → חדרה":{"p":220,"src":"market","n":4,"a":100},"בני ברק → ראשון לציון":{"p":120,"src":"market","n":28,"a":64},"הרצליה → ירושלים":{"p":300,"src":"market","n":4,"a":75},"נתניה → אשדוד":{"p":300,"src":"market","n":11,"a":55},"נתניה → אלעד":{"p":100,"src":"market","n":3,"a":67},"קרית ספר → בית שמש":{"p":160,"src":"market","n":5,"a":80},"בני ברק → אלעד":{"p":100,"src":"market","n":20,"a":65},"אשדוד → בני ברק":{"p":180,"src":"market","n":9,"a":67},"בית שמש → זכרון יעקב":{"p":120,"src":"market","n":4,"a":75},"תל אביב → קרית ספר":{"p":160,"src":"market","n":18,"a":44},"אור יהודה → ירושלים":{"p":100,"src":"market","n":8,"a":63},"מעלה אדומים → מודיעין":{"p":200,"src":"market","n":6,"a":83},"ירושלים → גבעת זאב":{"p":100,"src":"market","n":16,"a":81},"מעלה אדומים → ירושלים":{"p":120,"src":"market","n":18,"a":56},"אשדוד → ירושלים":{"p":220,"src":"market","n":9,"a":56},"מודיעין → קרית ספר":{"p":60,"src":"market","n":8,"a":63},"פתח תקווה → פתח תקווה":{"p":50,"src":"market","n":3,"a":67},"בני ברק → רעננה":{"p":120,"src":"market","n":13,"a":69},"אשדוד → יבנה":{"p":120,"src":"market","n":3,"a":67},"ראשון לציון → מודיעין":{"p":150,"src":"market","n":3,"a":67},"ראש העין → פתח תקווה":{"p":80,"src":"market","n":5,"a":100},"פתח תקווה → תל אביב":{"p":100,"src":"market","n":15,"a":47},"בני ברק → בית שמש":{"p":200,"src":"market","n":20,"a":50},"נתניה → בית שמש":{"p":100,"src":"market","n":10,"a":90},"בית שמש → חולון":{"p":200,"src":"market","n":3,"a":100},"ביתר עילית → בית שמש":{"p":120,"src":"market","n":21,"a":62},"ראשון לציון → ירושלים":{"p":200,"src":"market","n":7,"a":43},"בית שמש → תל אביב":{"p":220,"src":"market","n":6,"a":100},"ירושלים → קרית ספר":{"p":150,"src":"market","n":68,"a":54},"גבעת שמואל → בני ברק":{"p":60,"src":"market","n":13,"a":46},"ירושלים → מעלה אדומים":{"p":120,"src":"market","n":33,"a":45},"ראשון לציון → חיפה":{"p":150,"src":"market","n":5,"a":80},"ביתר עילית → בני ברק":{"p":340,"src":"market","n":9,"a":44},"תל השומר → בת ים":{"p":120,"src":"market","n":4,"a":100},"בית שמש → נתניה":{"p":380,"src":"market","n":5,"a":80},"נתניה → קרית ספר":{"p":290,"src":"market","n":7,"a":57},"הרצליה → בני ברק":{"p":120,"src":"market","n":4,"a":100},"יהוד → ירושלים":{"p":100,"src":"market","n":3,"a":100},"בני ברק → ביתר עילית":{"p":250,"src":"market","n":10,"a":40},"קרית גת → אשקלון":{"p":120,"src":"market","n":3,"a":100},"בית חורון → ירושלים":{"p":120,"src":"market","n":4,"a":100},"ירושלים → אלעד":{"p":220,"src":"market","n":20,"a":40},"בת ים → בני ברק":{"p":120,"src":"market","n":6,"a":100},"אשדוד → אשקלון":{"p":120,"src":"market","n":10,"a":50},"פתח תקווה → ביתר עילית":{"p":30,"src":"market","n":3,"a":67},"בית שמש → רחובות":{"p":180,"src":"market","n":6,"a":67},"בני ברק → אור יהודה":{"p":100,"src":"market","n":9,"a":56},"פתח תקווה → אשדוד":{"p":50,"src":"market","n":9,"a":78},"אשדוד → קרית גת":{"p":170,"src":"market","n":4,"a":50},"ירושלים → תל אביב":{"p":260,"src":"market","n":5,"a":40},"טלז סטון → קרית ספר":{"p":150,"src":"market","n":3,"a":100},"גבעת זאב → בית שמש":{"p":180,"src":"market","n":15,"a":80},"רחובות → ירושלים":{"p":220,"src":"market","n":7,"a":57},"ירושלים → רחובות":{"p":200,"src":"market","n":10,"a":50},"בית שמש → קרית ספר":{"p":160,"src":"market","n":11,"a":100},"אלעד → ירושלים":{"p":220,"src":"market","n":7,"a":71},"אלעד → בני ברק":{"p":100,"src":"market","n":12,"a":67},"טלז סטון → ירושלים":{"p":120,"src":"market","n":3,"a":100},"יבנה → אשדוד":{"p":120,"src":"market","n":5,"a":100},"פתח תקווה → ראשון לציון":{"p":50,"src":"market","n":7,"a":57},"בני ברק → עמנואל":{"p":300,"src":"market","n":3,"a":100},"ראשון לציון → קרית ספר":{"p":150,"src":"market","n":3,"a":67},"בני ברק → לוד":{"p":120,"src":"market","n":11,"a":64},"תל אביב → נתניה":{"p":180,"src":"market","n":7,"a":100},"תל אביב → בית שמש":{"p":220,"src":"market","n":4,"a":75},"אשדוד → ביתר עילית":{"p":250,"src":"market","n":5,"a":60},"תל אביב → לוד":{"p":120,"src":"market","n":5,"a":60},"בת ים → ירושלים":{"p":220,"src":"market","n":7,"a":86},"גבעת שמואל → בית שמש":{"p":200,"src":"market","n":3,"a":100},"בית שמש → אשקלון":{"p":250,"src":"market","n":9,"a":100},"ירושלים → מודיעין":{"p":150,"src":"market","n":5,"a":80},"ראשון לציון → פתח תקווה":{"p":120,"src":"market","n":10,"a":60},"אשקלון → אשדוד":{"p":120,"src":"market","n":5,"a":100},"רחובות → אשדוד":{"p":140,"src":"market","n":7,"a":100},"גני תקווה → תל אביב":{"p":120,"src":"market","n":3,"a":100},"קרית ספר → אלעד":{"p":140,"src":"market","n":4,"a":100},"ירושלים → באר שבע":{"p":450,"src":"market","n":4,"a":50},"מודיעין → אשדוד":{"p":220,"src":"market","n":3,"a":100},"נתניה → ירושלים":{"p":350,"src":"market","n":3,"a":100},"ירושלים → אופקים":{"p":450,"src":"market","n":4,"a":50},"ירושלים → חולון":{"p":240,"src":"market","n":3,"a":67},"אשקלון → קרית גת":{"p":120,"src":"market","n":7,"a":86},"בני ברק → הרצליה":{"p":120,"src":"market","n":9,"a":89},"פתח תקווה → ראש העין":{"p":80,"src":"market","n":4,"a":75},"תל אביב → פתח תקווה":{"p":120,"src":"market","n":6,"a":67},"חולון → רחובות":{"p":120,"src":"market","n":3,"a":100},"בית שמש → תל השומר":{"p":200,"src":"market","n":5,"a":60},"קרית ספר → יבנה":{"p":220,"src":"market","n":3,"a":67},"קרית ספר → ראשון לציון":{"p":150,"src":"market","n":5,"a":60},"קרית ספר → תל אביב":{"p":180,"src":"market","n":8,"a":63},"בני ברק → חולון":{"p":120,"src":"market","n":13,"a":46},"בית שמש → קרית גת":{"p":170,"src":"market","n":4,"a":75},"נתיבות → אופקים":{"p":100,"src":"market","n":3,"a":67},"ירושלים → נתניה":{"p":100,"src":"market","n":9,"a":56},"רחובות → לוד":{"p":100,"src":"market","n":3,"a":67},"בת ים → חולון":{"p":100,"src":"market","n":3,"a":100},"בני ברק → רחובות":{"p":150,"src":"market","n":8,"a":75},"אלעד → פתח תקווה":{"p":80,"src":"market","n":5,"a":60},"קרית ספר → בת ים":{"p":160,"src":"market","n":3,"a":100},"רמת גן → ירושלים":{"p":120,"src":"market","n":5,"a":60},"תל אביב → ירושלים":{"p":240,"src":"market","n":13,"a":85},"רחובות → בת ים":{"p":120,"src":"market","n":3,"a":100},"בני ברק → רמלה":{"p":120,"src":"market","n":4,"a":50},"קרית ספר → מודיעין":{"p":70,"src":"market","n":8,"a":50},"פתח תקווה → תל השומר":{"p":80,"src":"market","n":3,"a":100},"פתח תקווה → צפת":{"p":100,"src":"market","n":3,"a":100},"בני ברק → הוד השרון":{"p":120,"src":"market","n":3,"a":67},"לוד → רמת גן":{"p":120,"src":"market","n":4,"a":100},"תל אביב → אלעד":{"p":150,"src":"market","n":5,"a":100},"רחובות → תל אביב":{"p":150,"src":"market","n":3,"a":67},"תל השומר → קרית ספר":{"p":200,"src":"market","n":3,"a":67},"אור יהודה → בני ברק":{"p":80,"src":"market","n":4,"a":50},"כפר חבד → ירושלים":{"p":200,"src":"market","n":3,"a":100},"רמת גן → נס ציונה":{"p":150,"src":"market","n":3,"a":100},"קרית ספר → מעלה אדומים":{"p":280,"src":"market","n":3,"a":67},"רמת השרון → תל אביב":{"p":120,"src":"market","n":4,"a":100},"קרית ספר → פתח תקווה":{"p":120,"src":"market","n":5,"a":40},"אלעד → נתניה":{"p":200,"src":"market","n":4,"a":75},"קרית גת → תל אביב":{"p":280,"src":"market","n":4,"a":75},"אלעד → כפר חבד":{"p":150,"src":"market","n":3,"a":100},"עכו → צפת":{"p":220,"src":"market","n":4,"a":100},"ראשון לציון → אשדוד":{"p":170,"src":"market","n":4,"a":50}},"hoodOv":{"בית שמש → ירושלים":{"רמות":170,"נווה יעקב":170,"רמת שלמה":170,"גבעת שאול":170,"בית וגן":170}},"cities":["אבן יהודה","אופקים","אור יהודה","אילת","אלון שבות","אלעד","אריאל","אשדוד","אשקלון","אשתאול","באר שבע","בית חורון","בית שמש","ביתר עילית","בני ברק","בת ים","גבעת זאב","גבעת שמואל","גני תקווה","דימונה","הוד השרון","הר אדר","הרצליה","זכרון יעקב","חדרה","חולון","חיפה","טבעון","טבריה","טלז סטון","יבנה","יהוד","ירושלים","כוכב יעקב","כפר חבד","כפר סבא","כרמיאל","לוד","מבשרת ציון","מגדל העמק","מודיעין","מודיעין עילית","מעלה אדומים","נהריה","נווה דניאל","נס ציונה","נצרת","נתיבות","נתניה","עכו","עמנואל","עפולה","ערד","פרדס חנה","פתח תקווה","צפת","צריפין","קרית אונו","קרית גת","קרית יערים","קרית מלאכי","קרית ספר","ראש העין","ראשון לציון","רחובות","רמלה","רמת אביב","רמת גן","רמת השרון","רעננה","שדרות","תל אביב","תל השומר"],"hoods":["ארנונה","בית וגן","בית ישראל","בקעה","גאולה","גבעת מרדכי","גבעת שאול","גילה","הר המנוחות","הר חומה","הר נוף","זכרון משה","מאה שערים","מטרסדורף","מלחה","מעלות דפנה","מקור ברוך","נווה יעקב","סנהדריה","עזרת תורה","עין כרם","עיר גנים","פסגת זאב","קטמון","קרית בעלז","קרית יובל","קרית משה","רוממה","רחביה","רמות","רמת אשכול","רמת שלמה","שמואל הנביא","תלפיות"],"fleet":[{"max":4,"name":"רכב פרטי","mult":1},{"max":7,"name":"ואן / סטיישן","mult":1.25},{"max":10,"name":"מיניבוס 10 מקומות","mult":1.5},{"max":20,"name":"מיניבוס 20 מקומות","mult":2},{"max":35,"name":"אוטובוס בינוני","mult":2.8},{"max":60,"name":"אוטובוס תיירים","mult":3.5}],"rate":4};
+const F=document.getElementById('from'),T=document.getElementById('to');
+let pax=0, rt=false;
+
+// רשימת יעדים = ערים + שכונות ירושלים
+const HOODSET=new Set(D.hoods);
+const ALL=[...D.cities.map(c=>({n:c,t:''})),...D.hoods.map(h=>({n:h,t:'שכונה בירושלים'}))];
+
+function cityOf(name){ return HOODSET.has(name)?'ירושלים':name; }
+function hoodOf(name){ return HOODSET.has(name)?name:null; }
+
+function findPrice(a,b){
+  const ca=cityOf(a), cb=cityOf(b), hood=hoodOf(b)||hoodOf(a);
+  // 1) חריג שכונתי
+  if(hood){
+    for(const k of [ca+' → '+cb, cb+' → '+ca]){
+      const o=D.hoodOv[k]; if(o&&o[hood]!=null) return {p:o[hood],src:'own',hood};
+    }
+  }
+  // 2) מסלול ישיר (סימטרי)
+  const r=D.routes[ca+' → '+cb]||D.routes[cb+' → '+ca];
+  if(r) return {...r};
+  return null;
+}
+
+function fleetFor(p){ if(!p) return null; return D.fleet.find(v=>p<=v.max)||D.fleet[D.fleet.length-1]; }
+
+function render(){
+  const a=F.value.trim(), b=T.value.trim(), R=document.getElementById('res');
+  if(!a||!b){ R.innerHTML='<div class="empty">בחר מוצא ויעד לקבלת מחיר</div>'; return; }
+  const hit=findPrice(a,b);
+  const veh=fleetFor(pax);
+  if(!hit){
+    R.innerHTML='<div class="route"><b>'+esc(a)+'</b> ⟵⟶ <b>'+esc(b)+'</b></div>'+
+      '<div class="empty">אין מחיר מאומת למסלול זה.<br>נקבע מחיר אישי.</div>'+
+      '<a class="wa" href="https://wa.me/972506567045?text='+encodeURIComponent('נסיעה מ'+a+' ל'+b)+'">תאם בוואטסאפ</a>';
+    return;
+  }
+  let price=hit.p;
+  if(veh) price=Math.round(price*veh.mult);
+  if(rt) price*=2;
+  const badge = hit.src==='own'
+    ? '<span class="badge b-own">המחירון שלך</span>'
+    : '<span class="badge b-mkt">מחיר שוק · '+hit.n+' דגימות · '+hit.a+'% הסכמה</span>';
+  R.innerHTML='<div class="route"><b>'+esc(a)+'</b> ⟵⟶ <b>'+esc(b)+'</b></div>'+
+    '<div class="price">'+price+'<small>₪</small></div>'+
+    '<div class="meta">'+(veh?veh.name+' · ':'')+(rt?'הלוך-חזור':'כיוון אחד')+
+      (hit.hood?'<br>תעריף שכונה: '+hit.hood:'')+'</div>'+badge+
+    '<a class="wa" href="https://wa.me/972506567045?text='+encodeURIComponent('נסיעה מ'+a+' ל'+b+' — '+price+'₪')+'">שלח בוואטסאפ</a>';
+}
+function esc(s){return String(s).replace(/[<>&]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;'}[c]));}
+
+// ── השלמה אוטומטית ──
+function wire(inp,box){
+  let idx=-1;
+  inp.addEventListener('input',()=>{
+    const q=inp.value.trim(); idx=-1;
+    if(!q){box.classList.remove('on');render();return;}
+    const list=ALL.filter(o=>o.n.includes(q)).slice(0,8);
+    if(!list.length){box.classList.remove('on');render();return;}
+    box.innerHTML=list.map(o=>'<div data-v="'+o.n+'">'+o.n+(o.t?'<span class="tag">'+o.t+'</span>':'')+'</div>').join('');
+    box.classList.add('on');
+    [...box.children].forEach(el=>el.onclick=()=>{inp.value=el.dataset.v;box.classList.remove('on');render();});
+    render();
+  });
+  inp.addEventListener('keydown',e=>{
+    const items=[...box.children]; if(!items.length)return;
+    if(e.key==='ArrowDown'){e.preventDefault();idx=Math.min(idx+1,items.length-1);}
+    else if(e.key==='ArrowUp'){e.preventDefault();idx=Math.max(idx-1,0);}
+    else if(e.key==='Enter'&&idx>=0){e.preventDefault();inp.value=items[idx].dataset.v;box.classList.remove('on');render();return;}
+    else return;
+    items.forEach(i=>i.classList.remove('sel')); items[idx].classList.add('sel');
+    items[idx].scrollIntoView({block:'nearest'});
+  });
+  inp.addEventListener('blur',()=>setTimeout(()=>box.classList.remove('on'),180));
+}
+wire(F,document.getElementById('sfrom'));
+wire(T,document.getElementById('sto'));
+
+document.getElementById('swap').onclick=()=>{const t=F.value;F.value=T.value;T.value=t;render();};
+document.querySelectorAll('#opts .chip[data-pax]').forEach(c=>c.onclick=()=>{
+  document.querySelectorAll('#opts .chip[data-pax]').forEach(x=>x.classList.remove('on'));
+  c.classList.add('on'); pax=+c.dataset.pax; render();
+});
+document.getElementById('rt').onclick=function(){ rt=!rt; this.classList.toggle('on'); render(); };
+
+// ── מסלולים נפוצים ──
+const own=Object.entries(D.routes).filter(([,v])=>v.src==='own');
+const mkt=Object.entries(D.routes).filter(([,v])=>v.src==='market').sort((a,b)=>b[1].n-a[1].n);
+const quick=[...own.slice(0,8),...mkt.slice(0,8)].slice(0,14);
+document.getElementById('quick').innerHTML=quick.map(([k,v])=>{
+  const [a,b]=k.split(' → ');
+  return '<div class="q" data-a="'+a+'" data-b="'+b+'"><span>'+a+' ⟵⟶ '+b+'</span><b>'+v.p+'₪</b></div>';
+}).join('');
+document.querySelectorAll('.q').forEach(q=>q.onclick=()=>{
+  F.value=q.dataset.a; T.value=q.dataset.b; render();
+  document.getElementById('res').scrollIntoView({behavior:'smooth',block:'center'});
+});
+</script></body></html>
