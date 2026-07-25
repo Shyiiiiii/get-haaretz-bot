@@ -1,14 +1,13 @@
 {
   "name": "get-haaretz-pricing-bot",
   "version": "1.0.0",
-  "description": "בוט וואטסאפ להערכת מחיר נסיעות לפי ק\"מ — Get הארץ",
+  "description": "בוט וואטסאפ ומחירון להסעות — Get הארץ",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
     "test": "node test.js",
-    "start:meta": "node server-meta.js",
     "simulate": "node tools/simulate.js",
-    "pricebook": "node tools/build-pricebook.js"
+    "build": "node tools/build-prices.js && node tools/build-pricebook.js && node tools/build-public.js"
   },
   "dependencies": {
     "dotenv": "^16.4.5",

@@ -3,10 +3,16 @@ services:
     name: get-haaretz-bot
     runtime: node
     plan: free
-    buildCommand: npm install
+    buildCommand: npm ci && npm test
     startCommand: npm start
     healthCheckPath: /
     envVars:
       # אופציונלי — רק אם רוצים חישוב ק"מ למסלולים שאינם במחירון
       - key: GOOGLE_MAPS_API_KEY
+        sync: false
+      # מומלץ מאוד — מגן על לוח הניהול
+      - key: ADMIN_PASS
+        sync: false
+      # מומלץ מאוד — חוסם בקשות מזויפות ל-Webhook (מ-Twilio Console)
+      - key: TWILIO_AUTH_TOKEN
         sync: false

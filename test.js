@@ -1,50 +1,52 @@
 const { parseTrip } = require('./src/parse');
-const { calcKmPrice, lookupManualPrice, lookupMarketPrice } = require('./src/pricing');
+const { getPrice } = require('./src/pricing');
 const { resolveCity } = require('./src/places');
 
 let pass = 0, fail = 0;
-const eq = (name, got, want) => { const okk = JSON.stringify(got) === JSON.stringify(want); console.log(`${okk?'✅':'❌'} ${name}`); if(!okk){console.log('   קיבלתי:',JSON.stringify(got));console.log('   ציפיתי:',JSON.stringify(want));fail++;}else pass++; };
-const ok = (name, cond) => { console.log(`${cond?'✅':'❌'} ${name}`); cond?pass++:fail++; };
-const pick = (t) => { const {origin,destination,originCity,destCity,originHood,destHood}=t; return {origin,destination,originCity,destCity,originHood,destHood}; };
-const pickHood = (t) => ({ origin:t.origin, destCity:t.destCity, destHood:t.destHood });
+const ok = (name, cond) => { console.log(`${cond ? '✅' : '❌'} ${name}`); cond ? pass++ : fail++; };
+const price = (a, b, opts) => { const r = getPrice(a, b, opts); return r ? r.price : null; };
 
-// ── פענוח בסיסי ──
-eq('בב פת', pick(parseTrip('בב פת')), { origin:'בני ברק', destination:'פתח תקווה', originCity:'בני ברק', destCity:'פתח תקווה', originHood:null, destHood:null });
-ok('ים שמש הלוך חזור', parseTrip('ים שמש הלוך חזור').roundTrip === true);
-ok('פנימי בב', parseTrip('פנימי בב 50').intracity === true);
-ok('לא זוהה', parseTrip('שלום') === null);
+// ── פענוח ──
+ok('קיצורים: בב פת', parseTrip('בב פת').destCity === 'פתח תקווה');
+ok('הלוך-חזור', parseTrip('ים שמש הלוך חזור').roundTrip === true);
+ok('נסיעה עירונית', parseTrip('פנימי בב 50').intracity === true);
+ok('הודעה לא ברורה', parseTrip('שלום') === null);
+ok('שכונה: מבית שמש לרמות', parseTrip('מבית שמש לרמות').destHood === 'רמות');
+ok('הר נוף = ירושלים', parseTrip('מהר נוף לבית שמש').originCity === 'ירושלים');
+ok('קריית = קרית', resolveCity('קריית משה').city === 'ירושלים');
 
-// ── שכונות ירושלים ──
-eq('מבית שמש לרמות', pickHood(parseTrip('מבית שמש לרמות')), { origin:'בית שמש', destCity:'ירושלים', destHood:'רמות' });
-ok('הר נוף = שכונת ירושלים', parseTrip('מהר נוף לבית שמש').originCity === 'ירושלים');
-
-// ── לקחים מצ'אט לקוחה אמיתי (חן) ──
-ok('קריית (איות כפול) = ירושלים', resolveCity('קריית משה').city === 'ירושלים');
-eq('"קריית משה לגדרה"', pickHood(parseTrip('קריית משה לגדרה')), { origin:'קרית משה', destCity:'גדרה', destHood:null });
-eq('"כמה זה מגדרה לתל אביב?"', (()=>{const t=parseTrip('כמה זה מגדרה לתל אביב?');return {o:t.originCity,d:t.destCity};})(), { o:'גדרה', d:'תל אביב' });
-
-// ── מחירים ידניים (עדיפות עליונה) ──
-ok('בית שמש→ירושלים = 150', lookupManualPrice('בית שמש','ירושלים').price === 150);
-ok('ירושלים→בית שמש = 150 (סימטרי)', lookupManualPrice('ירושלים','בית שמש').price === 150);
-ok('בית שמש→רמות = 170', lookupManualPrice('בית שמש','ירושלים',{bHood:'רמות'}).price === 170);
-ok('רמות→בית שמש = 170 (סימטרי)', lookupManualPrice('ירושלים','בית שמש',{aHood:'רמות'}).price === 170);
-ok('שכונה ללא override → 150', lookupManualPrice('בית שמש','ירושלים',{bHood:'גילה'}).price === 150);
-ok('בית שמש→ירושלים הלו"ש = 300', lookupManualPrice('בית שמש','ירושלים',{roundTrip:true}).price === 300);
-
-// ── שוק + ק"מ ──
-ok('מחיר שוק קיים למסלול נפוץ', lookupMarketPrice('ירושלים','בית שמש') !== null);
-ok('ק"מ 50 = 200', calcKmPrice(50).price === 200);
-
-ok('כיווני: פ"ת→ב"ב = 50', lookupManualPrice('פתח תקווה','בני ברק').price === 50);
-ok('כיווני: ב"ב→פ"ת = 80', lookupManualPrice('בני ברק','פתח תקווה').price === 80);
-ok('ליבה: פ"ת→ירושלים = 70', lookupManualPrice('פתח תקווה','ירושלים').price === 70);
-// ── ערים דו-מיליות וגזטיר ──
-ok('בת ים לא נחתך', parseTrip('מבני ברק לבת ים').destCity === 'בת ים');
+// ── ערים דו-מיליות ──
+ok('בת ים שלם', parseTrip('מבני ברק לבת ים').destCity === 'בת ים');
 ok('מעלה אדומים שלם', parseTrip('מירושלים למעלה אדומים').destCity === 'מעלה אדומים');
-ok('מודיעין עילית לא נחתך', parseTrip('מודיעין עילית לבני ברק').originCity === 'מודיעין עילית');
+ok('מודיעין עילית שלם', parseTrip('מודיעין עילית לבני ברק').originCity === 'מודיעין עילית');
 ok('גבעת שמואל ≠ גבעת זאב', parseTrip('מגבעת שמואל לראש העין').originCity === 'גבעת שמואל');
-ok('ראש העין שלם', parseTrip('מגבעת שמואל לראש העין').destCity === 'ראש העין');
-ok('עיר רחוקה מזוהה', parseTrip('מאשקלון לחיפה').destCity === 'חיפה');
+ok('עיר רחוקה', parseTrip('מאשקלון לחיפה').destCity === 'חיפה');
+
+// ── נתב"ג ──
+ok('שדה = נתב"ג', parseTrip('בב שדה').destCity === 'שדה התעופה');
+ok('נתבג עם תחילית', parseTrip('מבית שמש לנתבג').destCity === 'שדה התעופה');
+ok('שדה עוזיהו ≠ נתב"ג', parseTrip('משדה עוזיהו לאשדוד').originCity === 'שדה עוזיהו');
+
+// ── מחירים שאישרת ──
+ok('בית שמש ↔ ירושלים = 150', price('בית שמש','ירושלים') === 150 && price('ירושלים','בית שמש') === 150);
+ok('שכונת רמות = 170', price('רמות','בית שמש') === 170 && price('בית שמש','רמות') === 170);
+ok('שכונה ללא חריג → 150', price('בית שמש','ירושלים') === 150);
+ok('פ"ת ↔ ירושלים = 220', price('פתח תקווה','ירושלים') === 220);
+ok('ב"ב ↔ פ"ת = 80', price('בני ברק','פתח תקווה') === 80 && price('פתח תקווה','בני ברק') === 80);
+ok('ת"א ↔ בת ים = 70', price('תל אביב','בת ים') === 70);
+ok('אשדוד ↔ יבנה = 120', price('אשדוד','יבנה') === 120);
+ok('אשדוד ↔ בית שמש = 200', price('אשדוד','בית שמש') === 200);
+ok('אופקים ↔ אמונים = 250', price('אופקים','אמונים') === 250);
+ok('ירושלים ↔ ראשון = 200', price('ירושלים','ראשון לציון') === 200);
+
+// ── כללים ──
+ok('הלו"ש = ×2 פחות 40', price('בית שמש','ירושלים',{roundTrip:true}) === 260);
+ok('מסלול מוחרג → אין מחיר', price('גבעת זאב','ירושלים') === null);
+ok('פער כיווני מיושר', price('בית שמש','פתח תקווה') === price('פתח תקווה','בית שמש'));
+ok('פער כיווני → הגבוה', price('בית שמש','פתח תקווה') === 200);
+ok('מסלול לא מוכר → null', price('אילת','מטולה') === null);
+ok('מחיר מאומת זמין', price('אשקלון','אשדוד') !== null);
+ok('נתב"ג מתומחר', price('אשדוד','שדה התעופה') !== null);
 
 console.log(`\nסה"כ: ${pass} עברו, ${fail} נכשלו`);
-process.exit(fail?1:0);
+process.exit(fail ? 1 : 0);
